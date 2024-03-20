@@ -1,0 +1,11 @@
+python-dotenv
+neo4j
+streamlit
+fastapi
+pydantic
+uvicorn
+sse-starlette
+langchain
+langchain_openai
+langchain_community
+dotenv
