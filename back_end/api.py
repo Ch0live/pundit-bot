@@ -5,9 +5,9 @@ from extractor import extract_teams
 from summariser import summarise_two_team_matches_response
 from chains import (
     configure_llm_only_chain,
-    load_llm,
     BaseLogger
 )
+from langchain_openai import ChatOpenAI
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from langchain.callbacks.base import BaseCallbackHandler
@@ -19,14 +19,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 from dotenv import load_dotenv
 
-load_dotenv(".env")
-
-url = os.getenv("NEO4J_URI")
-username = os.getenv("NEO4J_USERNAME")
-password = os.getenv("NEO4J_PASSWORD")
-llm_name = os.getenv("LLM")
-llm = load_llm(llm_name, logger=BaseLogger())
-llm_chain = configure_llm_only_chain(llm)
+class Question(BaseModel):
+    text: str
+    rag: bool = False
 
 class QueueCallback(BaseCallbackHandler):
     """Callback handler for streaming LLM responses to a queue."""
@@ -63,7 +58,31 @@ def stream(cb, q) -> Generator:
         except Empty:
             continue
 
+# Get values from .env, set up config and load chosen llm
+load_dotenv(".env")
 
+url = os.getenv("NEO4J_URI")
+username = os.getenv("NEO4J_USERNAME")
+password = os.getenv("NEO4J_PASSWORD")
+llm_name = os.getenv("LLM")
+
+def load_llm(llm_name: str, logger=BaseLogger(), config={}):
+    if llm_name == "gpt-4":
+        logger.info("LLM: To save on cost we're not currently allowing GTP-4. Using GPT-3.5 Turbo")
+        return ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo", streaming=True)
+    elif llm_name == "gpt-3.5":
+        logger.info("LLM: Using GPT-3.5")
+        return ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo", streaming=True)
+    elif llm_name == "mistral-large":
+        logger.info("LLM: Using Mistral-Large model")
+        exit("Currently in development") # TODO: Complete all required changes to support Mistral Large deployed in Azure
+    else:
+        exit("Please specify an LLM. Options include gpt-4, gpt-3.5 and mistral-large") # TODO: Complete all required changes to support Mistral Large deployed in Azure
+
+llm = load_llm(llm_name, logger=BaseLogger())
+llm_chain = configure_llm_only_chain(llm)
+
+# Loads valid team names that have db data
 def get_team_names():
     file_path = "back_end/team_names.txt"
     try:
@@ -75,9 +94,8 @@ def get_team_names():
         print(f"An error occurred: {e}")
 
 team_names = get_team_names()
-print("team names")
-print(team_names)
 
+# Create FastAPI app & permit all cross-origin requests
 app = FastAPI()
 origins = ["*"]
 
@@ -89,14 +107,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Question(BaseModel):
-    text: str
-    rag: bool = False
-
+# healthcheck endpoint
 @app.get("/")
 async def root():
     return {"message": "The pundit-bot backend is live!"}
 
+# Standard entrypoint to pundit-bot. Call with query param text={question} to ask pundit-bot questions
 @app.get("/query-stream")
 def query_stream(question: Question = Depends()):
 
@@ -147,7 +163,7 @@ def query_stream(question: Question = Depends()):
     # Create generate() method that returns the response in a stream of token-word pairs
     q = Queue()
 
-    def cb():
+    def callback():
         output_function(
             {"question": question.text, "chat_history": []},
             callbacks=[QueueCallback(q)],
@@ -155,7 +171,7 @@ def query_stream(question: Question = Depends()):
 
     def generate():
         yield json.dumps({"init": True, "model": llm_name})
-        custom_stream = stream(cb, q)
+        custom_stream = stream(callback, q)
         for token, _ in custom_stream:
             yield json.dumps({"token": token})
 

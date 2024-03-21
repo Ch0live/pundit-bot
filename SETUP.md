@@ -8,7 +8,7 @@ TODO: This set up guide
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
-pyhton back_end/api.py
+python back_end/api.py
 
 - set up front end
 cd front_end; npm install; npm run dev
