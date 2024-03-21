@@ -38,15 +38,15 @@ function createChatStore() {
         });
     }
 
-    async function send(question, ragMode = false) {
+    async function send(question, llmModel = "gpt-3.5") {
         if (!question.trim().length) {
             return;
         }
         update((state) => ({ ...state, state: chatStates.RECEIVING }));
-        addMessage("me", question, ragMode);
-        const messageId = addMessage("bot", "", ragMode);
+        addMessage("me", question, llmModel);
+        const messageId = addMessage("bot", "", llmModel);
         try {
-            const evt = new EventSource(`${API_ENDPOINT}?text=${encodeURI(question)}&rag=${ragMode}`);
+            const evt = new EventSource(`${API_ENDPOINT}?text=${encodeURI(question)}&llmModel=${llmModel}`);
             question = "";
             evt.onmessage = (e) => {
                 if (e.data) {

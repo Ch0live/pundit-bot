@@ -9,15 +9,15 @@
     import Modal from "./lib/Modal.svelte";
     import { generationStore } from "./lib/generation.store";
 
-    let ragMode = false;
-    let question = "Tell me about the last Manchester City and Liverpool game";
+    let llmModel = "gpt-3.5-turbo"
+    let question = "";
     let shouldAutoScroll = true;
     let input;
     let senderImages = { bot: botImage, me: meImage };
     let generationModalOpen = false;
 
     function send() {
-        chatStore.send(question, ragMode);
+        chatStore.send(question, llmModel);
         question = "";
     }
 
@@ -44,7 +44,7 @@
     // send();
 </script>
 
-<main class="h-full text-sm bg-gradient-to-t from-indigo-100 bg-fixed overflow-hidden">
+<main class="h-full text-sm bg-gradient-to-t from-purple-400 bg-fixed overflow-hidden">
     <div on:scroll={scrolling} class="flex h-full flex-col py-12 overflow-y-auto" use:scrollToBottom={$chatStore}>
         <div class="w-4/5 mx-auto flex flex-col mb-32">
             {#each $chatStore.data as message (message.id)}
@@ -71,8 +71,8 @@
                         </div>
                         {#if message.from === "bot"}
                             <div class="text-sm">
-                                <div>Model: {message.model ? message.model : ""}</div>
-                                <div>RAG: {message.rag ? "Enabled" : "Disabled"}</div>
+                                <div><b>Pundit Bot</b></div>
+                                <div><i>Model: {message.model ? message.model : "Waiting for response..."}</i></div>
                             </div>
                         {/if}
                     </div>
@@ -81,21 +81,27 @@
             {/each}
         </div>
         <div class="text-sm w-full fixed bottom-16">
-            <div class="shadow-lg bg-indigo-50 rounded-lg w-4/5 xl:w-2/3 2xl:w-1/2 mx-auto">
+            <div class="shadow-lg bg-purple-50 rounded-lg w-4/5 xl:w-2/3 2xl:w-1/2 mx-auto">
                 <div class="rounded-t-lg px-4 py-2 font-light">
-                    <div class="font-semibold">RAG mode</div>
+                    <div class="font-semibold">Model</div>
                     <div class="">
+                        <label>
+                            <input type="radio" bind:group={llmModel} value={"gpt-3.5-turbo"} /> gpt-3.5-turbo
+                        </label>
                         <label class="mr-2">
-                            <input type="radio" bind:group={ragMode} value={false} /> Disabled
+                            <input type="radio" bind:group={llmModel} value={"gpt-3.5"} disabled/> gpt-3.5
                         </label>
                         <label>
-                            <input type="radio" bind:group={ragMode} value={true} /> Enabled
+                            <input type="radio" bind:group={llmModel} value={"gpt-4"} /> gpt-4
+                        </label>
+                        <label>
+                            <input type="radio" bind:group={llmModel} value={"mistral-large"} disabled/> mistral-large
                         </label>
                     </div>
                 </div>
                 <form class="rounded-md w-full bg-white p-2 m-0" on:submit|preventDefault={send}>
                     <input
-                        placeholder="What coding related question can I help you with?"
+                        placeholder="Try asking me about a football game"
                         disabled={$chatStore.state === chatStates.RECEIVING}
                         class="text-lg w-full bg-white focus:outline-none px-4"
                         bind:value={question}

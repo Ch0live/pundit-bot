@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 class Question(BaseModel):
     text: str
-    rag: bool = False
+    llmModel: str = "gpt-3.5"
 
 class QueueCallback(BaseCallbackHandler):
     """Callback handler for streaming LLM responses to a queue."""
@@ -68,19 +68,20 @@ llm_name = os.getenv("LLM")
 
 def load_llm(llm_name: str, logger=BaseLogger(), config={}):
     if llm_name == "gpt-4":
-        logger.info("LLM: To save on cost we're not currently allowing GTP-4. Using GPT-3.5 Turbo")
-        return ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo", streaming=True)
+        logger.info("LLM: Using GPT-4. WARNING: GPT-4 costs about 30x GPT-3.5")
+        return ChatOpenAI(temperature=0, model_name="gpt-4", streaming=True)
     elif llm_name == "gpt-3.5":
         logger.info("LLM: Using GPT-3.5")
+        return ChatOpenAI(temperature=0, model_name="gpt-3.5", streaming=True)
+    elif llm_name == "gpt-3.5-turbo":
+        logger.info("LLM: Using GPT-3.5-turbo")
         return ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo", streaming=True)
     elif llm_name == "mistral-large":
         logger.info("LLM: Using Mistral-Large model")
-        exit("Currently in development") # TODO: Complete all required changes to support Mistral Large deployed in Azure
+        print("Currently in development") # TODO: Complete all required changes to support Mistral Large deployed in Azure
+        raise ValueError
     else:
         exit("Please specify an LLM. Options include gpt-4, gpt-3.5 and mistral-large") # TODO: Complete all required changes to support Mistral Large deployed in Azure
-
-llm = load_llm(llm_name, logger=BaseLogger())
-llm_chain = configure_llm_only_chain(llm)
 
 # Loads valid team names that have db data
 def get_team_names():
@@ -107,7 +108,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# healthcheck endpoint
+# Health-check endpoint
 @app.get("/")
 async def root():
     return {"message": "The pundit-bot backend is live!"}
@@ -115,6 +116,12 @@ async def root():
 # Standard entrypoint to pundit-bot. Call with query param text={question} to ask pundit-bot questions
 @app.get("/query-stream")
 def query_stream(question: Question = Depends()):
+
+    try:
+        llm = load_llm(llm_name=question.llmModel, logger=BaseLogger())
+    except:
+        print("unable to set up " + question.llmModel + ". Using gpt-3.5-turbo")
+        llm = load_llm(llm_name="gpt-3.5-turbo", logger=BaseLogger())
 
     output_function = configure_llm_only_chain(llm)
 
