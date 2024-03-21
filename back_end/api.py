@@ -35,12 +35,12 @@ class QueueCallback(BaseCallbackHandler):
     def on_llm_end(self, *args, **kwargs) -> None:
         return self.q.empty()
 
-def stream(cb, q) -> Generator:
+def stream(callback, queue) -> Generator:
     job_done = object()
 
     def task():
-        x = cb()
-        q.put(job_done)
+        x = callback()
+        queue.put(job_done)
 
     t = Thread(target=task)
     t.start()
@@ -50,7 +50,7 @@ def stream(cb, q) -> Generator:
     # Get each new token from the queue and yield for our generator
     while True:
         try:
-            next_token = q.get(True, timeout=1)
+            next_token = queue.get(True, timeout=1)
             if next_token is job_done:
                 break
             content += next_token
@@ -64,6 +64,7 @@ load_dotenv(".env")
 url = os.getenv("NEO4J_URI")
 username = os.getenv("NEO4J_USERNAME")
 password = os.getenv("NEO4J_PASSWORD")
+databaseName = os.getenv("NEO4J_DB_NAME")
 llm_name = os.getenv("LLM")
 
 def load_llm(llm_name: str, logger=BaseLogger(), config={}):
@@ -157,7 +158,7 @@ def query_stream(question: Question = Depends()):
                 cypher_all_matches_between_two_teams, 
                 teamA=teamA, 
                 teamB=teamB, 
-                database_="epl-data"
+                database_=databaseName
             )
 
             driver.close()
@@ -183,7 +184,6 @@ def query_stream(question: Question = Depends()):
             yield json.dumps({"token": token})
 
     return EventSourceResponse(generate(), media_type="text/event-stream")
-
 
 if __name__ == '__main__':
     import uvicorn

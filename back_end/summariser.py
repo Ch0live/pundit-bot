@@ -29,9 +29,8 @@ def summarise_two_team_matches_response(llm, records):
 
         Summarise a response to the question using the data listed above  
         Only use data listed above. Do not infer any data outside of what is listed above.
-        Separate each game into its own paragraph. Separate the paragraphs with 2 new lines.
+        Separate each game into its own paragraph.
         Return the game with the earlier match date first.
-        Be unbiased in your response (you do not support either team).
         """
     )
   )

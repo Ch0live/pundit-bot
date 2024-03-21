@@ -23,3 +23,4 @@ For running the project locally see [the set up guide](SETUP.md).
 
 - [atriantus](https://github.com/atriantus)' [Neo4J graph of EPL data repo](https://github.com/atriantus/Neo4j-Graph-for-EPL-data) for the initial data and scheme for the Neo4J knowledge graph.
 - The [Docker GenAI stack repo](https://github.com/docker/genai-stack) for the general AI ChatBot structure.
+- Art used taken from [here](https://www.freepik.com/icon/businessman_5717368#fromView=resource_detail&position=18) and [here](https://www.123rf.com/photo_110071527_soccer-referee-icon-over-white-background-vector-illustration.html)
