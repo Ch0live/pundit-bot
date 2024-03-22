@@ -86,7 +86,7 @@ def load_llm(llm_name: str, logger=BaseLogger(), config={}):
 
 # Loads valid team names that have db data
 def get_team_names():
-    file_path = "back_end/team_names.txt"
+    file_path = "team_names.txt"
     try:
         with open(file_path) as f:
             return f.read().splitlines() 

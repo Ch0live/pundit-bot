@@ -8,4 +8,3 @@ sse-starlette
 langchain
 langchain_openai
 langchain_community
-dotenv
