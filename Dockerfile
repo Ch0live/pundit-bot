@@ -13,5 +13,7 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 # Copy the code into the working directory
 COPY /back_end /code
 
+EXPOSE 8504
+
 # Tell uvicorn to start spin up our code, which will be running inside the container now
 CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8504"]
