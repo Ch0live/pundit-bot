@@ -4,7 +4,7 @@ FROM python:3.12
 # Set up a working directory
 WORKDIR /code
 
-# Copy just the requirements into the working directory so it gets cached by itsel
+# Copy just the requirements into the working directory so it gets cached by itself
 COPY /back_end/requirements.txt /code/requirements.txt
 
 # Install the dependencies from the requirements file
