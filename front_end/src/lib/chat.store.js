@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 
-const API_ENDPOINT = "http://localhost:8504/query-stream";
+const API_ENDPOINT = "http://" + import.meta.env.VITE_API_BACKEND_HOST + ":8504/query-stream";
 
 export const chatStates = {
     IDLE: "idle",
